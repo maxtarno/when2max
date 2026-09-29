@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "when2max",
+  "version": "0.1.0",
+  "description": "Autofill your when2meet availability from Google Calendar.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu8wWdokaL3j35Fd4fKEv+ISyQ6JXBSj04IKB7d/LA+b7SwewnKZKYNwN2jU+/J3WX1Vf3IN6mnN0ItOp0BocgB3XiFgCRgG5/tqaTDSnJwTQhmjaHieZx3loQHFJdg270UOlPCTfpbAErMHRwzPrqHuIjUqgEZI6iTdtb2v7DoXJc3Mt6mdlR6vPY426vbLRrbknRz9Adsb+zEBHMpJ4W2tCIvDlfe0CnN/iP+V92VQZI/cLA+7w2iOnae97bYLk6Bw76Ile8SU7i0U9s5mv9cs/dcskW4LXQGpDmQvH9bdR5z8FD9tIDIkgDFg9Ne6yfVO3Sspb+Yc9dZTsV59rMQIDAQAB",
+  "permissions": ["identity", "storage"],
+  "host_permissions": ["https://www.googleapis.com/*", "https://oauth2.googleapis.com/*"],
+  "oauth2": {
+    "client_id": "YOUR_CLIENT_ID.apps.googleusercontent.com",
+    "scopes": ["https://www.googleapis.com/auth/calendar.readonly"]
+  },
+  "background": { "service_worker": "background.js" },
+  "action": { "default_title": "when2max settings" },
+  "options_ui": { "page": "src/options/index.html", "open_in_tab": true },
+  "content_scripts": [
+    {
+      "matches": ["https://www.when2meet.com/*", "https://when2meet.com/*"],
+      "js": ["page.js"],
+      "world": "MAIN",
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.when2meet.com/*", "https://when2meet.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

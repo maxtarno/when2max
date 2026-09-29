@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>when2max settings</title>
+  <link rel="stylesheet" href="./options.css" />
+</head>
+<body>
+  <main>
+    <h1>when2max</h1>
+    <p class="sub">Autofills when2meet from your Google Calendar. After you sign in on a when2meet, you'll get a preview to confirm.</p>
+
+    <section>
+      <h2>Google account</h2>
+      <p id="auth-status">Checking…</p>
+      <div class="row">
+        <button id="sign-in" hidden>Connect Google Calendar</button>
+        <button id="sign-out" hidden>Disconnect</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Calendars that count as busy</h2>
+      <p class="hint">By default, the calendars you have visible in Google Calendar are used.</p>
+      <div id="calendars"><p class="hint">Connect your account to choose calendars.</p></div>
+      <button id="reset-calendars" class="link" hidden>Reset to calendars visible in Google Calendar</button>
+    </section>
+
+    <section>
+      <h2>Constraints</h2>
+      <label class="toggle">
+        <input type="checkbox" id="hours-enabled" />
+        Only mark free between
+        <select id="hours-start"></select> and <select id="hours-end"></select>
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="buffer-enabled" />
+        Keep a buffer of <input type="number" id="buffer-min" min="0" max="240" step="5" /> min before and after events
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="block-enabled" />
+        Skip free gaps shorter than <input type="number" id="block-min" min="15" max="480" step="15" /> min
+      </label>
+    </section>
+
+    <section>
+      <h2>Behavior</h2>
+      <label class="toggle">
+        <input type="checkbox" id="prompt-on-login" />
+        Show the preview automatically when I sign in on a when2meet
+      </label>
+      <p class="hint">
+        All-day events, declined invites, and events shown as “free” never block time, but they're listed in the preview so you can count them as busy.
+      </p>
+    </section>
+
+    <p id="saved" class="saved" aria-live="polite"></p>
+  </main>
+  <script type="module" src="./index.ts"></script>
+</body>
+</html>
