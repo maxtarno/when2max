@@ -53,6 +53,11 @@ window.addEventListener("message", async (e: MessageEvent) => {
   if ("reqId" in msg) {
     pending.get(msg.reqId)?.(msg);
     pending.delete(msg.reqId);
+  } else if (msg.type === "gridChanged" && msg.grid && state) {
+    // Manual clicks on the grid: refresh stripes and counts against what's actually saved.
+    state.grid = msg.grid;
+    highlight();
+    if (view === "preview") renderPreview();
   } else if (msg.type === "loggedIn" && msg.grid) {
     showLauncher();
     if (!extensionAlive() || (await loadSettings()).promptOnLogin) void startPreview();
@@ -103,7 +108,11 @@ function h<K extends keyof HTMLElementTagNameMap>(
   return el;
 }
 
+/** Which panel is showing, so background updates only re-render the preview. */
+let view: "preview" | "other" = "other";
+
 function render(...children: (Node | string | null | false | undefined)[]) {
+  view = "other";
   panel.replaceChildren(
     h("div", { className: "head" },
       h("strong", {}, "when2max"),
@@ -274,6 +283,7 @@ function renderPreview() {
       h("button", { className: "link", onclick: () => void bg({ type: "openOptions" }) }, "Settings"),
     ),
   );
+  view = "preview";
 }
 
 function reasonOf(e: CalEvent): IgnoreReason {

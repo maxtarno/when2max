@@ -9,6 +9,8 @@ export type CsToPage = { type: "getGrid" } | { type: "apply"; free: number[] };
 
 export type PageToCs =
   | { type: "loggedIn"; grid: GridInfo | null }
+  /** The user changed their availability by clicking/dragging on the grid. */
+  | { type: "gridChanged"; grid: GridInfo | null }
   | { type: "grid"; reqId: number; grid: GridInfo | null }
   | { type: "applied"; reqId: number; added: number; removed: number }
   | { type: "applyFailed"; reqId: number; error: string };

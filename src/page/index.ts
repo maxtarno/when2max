@@ -124,6 +124,24 @@ setInterval(() => {
   const uid = window.UserID ?? 0;
   if (uid && uid !== lastUser) {
     lastUser = uid;
-    post({ type: "loggedIn", grid: gridInfo() });
+    const grid = gridInfo();
+    lastAvailability = grid?.currentlyAvailable.join(",") ?? "";
+    post({ type: "loggedIn", grid });
   }
 }, 300);
+
+// Report manual edits so the preview can update. when2meet saves on mouseup/touchend via
+// its own SelectStop handler, so check right after it runs.
+let lastAvailability = "";
+function reportIfChanged() {
+  setTimeout(() => {
+    const grid = gridInfo();
+    const key = grid?.currentlyAvailable.join(",") ?? "";
+    if (grid && key !== lastAvailability) {
+      lastAvailability = key;
+      post({ type: "gridChanged", grid });
+    }
+  }, 0);
+}
+document.addEventListener("mouseup", reportIfChanged);
+document.addEventListener("touchend", reportIfChanged);
