@@ -19,7 +19,15 @@ import { BANNER_CSS, PAGE_CSS } from "./styles";
 
 // ---------- messaging ----------
 
+const STALE_MESSAGE = "when2max was updated or reloaded. Refresh this page to use it.";
+
+/** After the extension reloads, scripts already in open tabs lose their chrome.runtime connection. */
+function extensionAlive(): boolean {
+  return !!globalThis.chrome?.runtime?.id;
+}
+
 async function bg<T>(req: BgRequest): Promise<T> {
+  if (!extensionAlive()) throw new Error(STALE_MESSAGE);
   const res: BgResponse<T> = await chrome.runtime.sendMessage(req);
   if (!res.ok) throw new Error(res.error);
   return res.data;
@@ -44,7 +52,7 @@ window.addEventListener("message", async (e: MessageEvent) => {
     pending.delete(msg.reqId);
   } else if (msg.type === "loggedIn" && msg.grid) {
     showLauncher();
-    if ((await loadSettings()).promptOnLogin) void startPreview();
+    if (!extensionAlive() || (await loadSettings()).promptOnLogin) void startPreview();
   }
 });
 
@@ -109,6 +117,12 @@ function close() {
 }
 
 function renderError(message: string, retry?: () => void) {
+  if (message === STALE_MESSAGE) {
+    return render(
+      h("p", { className: "error" }, message),
+      h("div", { className: "actions" }, h("button", { className: "primary", onclick: () => location.reload() }, "Refresh page")),
+    );
+  }
   render(
     h("p", { className: "error" }, message),
     h("div", { className: "actions" },
@@ -168,6 +182,7 @@ function renderSignIn() {
 
 async function recompute() {
   if (!state) return;
+  if (!extensionAlive()) return renderError(STALE_MESSAGE);
   const settings = await loadSettings();
   state.result = computeFreeSlots(state.slots, state.slotMs, state.events, settings, state.forceBusy);
   highlight();
