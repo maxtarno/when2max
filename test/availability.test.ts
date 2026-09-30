@@ -92,6 +92,29 @@ describe("computeFreeSlots", () => {
   });
 });
 
+describe("slot status", () => {
+  const s = (hour: number, min = 0) => at(hour, min) / 1000;
+
+  it("explains why each slot is busy or free", () => {
+    const settings = {
+      ...OFF,
+      hoursWindow: { enabled: true, startHour: 9, endHour: 12 },
+      buffer: { enabled: true, minutes: 15 },
+      minBlock: { enabled: true, minutes: 30 },
+    };
+    const lecture = ev({ title: "Lecture", start: at(10), end: at(10, 30) });
+    const declined = ev({ title: "Skipped", start: at(9), end: at(9, 15), declined: true });
+    const r = computeFreeSlots(day(8, 12), SLOT, [lecture, declined, ev({ start: at(11, 15), end: at(12) })], settings);
+    expect(r.status.get(s(8, 45))!.kind).toBe("outside-hours");
+    expect(r.status.get(s(9))).toMatchObject({ kind: "free", ignored: [{ title: "Skipped", reason: "declined" }] });
+    expect(r.status.get(s(10))).toMatchObject({ kind: "event", events: [{ title: "Lecture" }] });
+    expect(r.status.get(s(9, 45))).toMatchObject({ kind: "buffer", events: [{ title: "Lecture" }] });
+    // 10:45–11:00 is free but only 15 min long before the 11:00 buffer.
+    expect(r.status.get(s(10, 30))!.kind).toBe("buffer");
+    expect(r.status.get(s(10, 45))!.kind).toBe("short-gap");
+  });
+});
+
 describe("weekday polls", () => {
   // Real when2meet values: Mon Nov 13 1978 09:00 UTC and Wed Nov 15 1978 09:00 UTC.
   const MON_9 = 279795600;

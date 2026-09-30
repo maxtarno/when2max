@@ -18,6 +18,12 @@ export const DEFAULT_SETTINGS: Settings = {
 
 export type IgnoreReason = "all-day" | "declined" | "marked-free";
 
+export const IGNORE_REASON_LABEL: Record<IgnoreReason, string> = {
+  "all-day": "all-day",
+  declined: "declined",
+  "marked-free": "shown as free",
+};
+
 /** A calendar event reduced to what the availability logic needs. */
 export interface CalEvent {
   id: string;

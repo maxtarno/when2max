@@ -4,6 +4,8 @@ A Chrome extension that fills in your [when2meet](https://www.when2meet.com) ava
 
 Sign in on a when2meet page and a panel appears with your free time previewed on the grid (green stripes = will be added, red = will be removed). Click **Apply** to save it, or **Undo** afterwards.
 
+While the panel is open, your calendar events are drawn over the grid: solid blue for events that block time, faded and dashed for ignored ones, and a strip at the top of the day for all-day events. Hover any cell to see why it's busy or free (event, buffer, outside your hours, or too-short gap). Untick **Show events on grid** to hide them.
+
 ## What counts as free
 
 A 15-minute slot is free when it doesn't overlap a busy event from your chosen calendars, subject to these settings (each can be toggled):

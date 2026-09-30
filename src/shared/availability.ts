@@ -44,7 +44,20 @@ export interface ComputeResult {
   ignored: IgnoredEvent[];
   /** Events that blocked time. */
   blocking: CalEvent[];
+  /** Why each slot ended up busy or free, keyed by when2meet slot time. */
+  status: Map<number, SlotStatus>;
 }
+
+export type SlotStatus = (
+  | { kind: "free" }
+  | { kind: "event"; events: CalEvent[] }
+  | { kind: "buffer"; events: CalEvent[] }
+  | { kind: "outside-hours" }
+  | { kind: "short-gap" }
+) & {
+  /** Ignored events overlapping this slot, so tooltips can mention them. */
+  ignored: IgnoredEvent[];
+};
 
 /**
  * Decide which slots are free.
@@ -73,31 +86,40 @@ export function computeFreeSlots(
   }
 
   const pad = settings.buffer.enabled ? settings.buffer.minutes * MIN : 0;
-  const busy = blocking.map((e) => [e.start - pad, e.end + pad] as const);
+  const overlaps = (a: number, b: number, start: number, end: number) => a < end && b > start;
 
   const sorted = [...slots].sort((a, b) => a.start - b.start);
-  const isFree = sorted.map((s) => {
+  const statuses: SlotStatus[] = sorted.map((s) => {
     const end = s.start + slotMs;
-    if (settings.hoursWindow.enabled && !withinHours(s.start, end, settings.hoursWindow)) return false;
-    return !busy.some(([bs, be]) => bs < end && be > s.start);
+    const here = ignored.filter((e) => overlaps(e.start, e.end, s.start, end));
+    const during = blocking.filter((e) => overlaps(e.start, e.end, s.start, end));
+    if (during.length) return { kind: "event", events: during, ignored: here };
+    const near = blocking.filter((e) => overlaps(e.start - pad, e.end + pad, s.start, end));
+    if (near.length) return { kind: "buffer", events: near, ignored: here };
+    if (settings.hoursWindow.enabled && !withinHours(s.start, end, settings.hoursWindow)) {
+      return { kind: "outside-hours", ignored: here };
+    }
+    return { kind: "free", ignored: here };
   });
 
   // Drop free runs shorter than the minimum block. A run is contiguous in real time.
   if (settings.minBlock.enabled && settings.minBlock.minutes > 0) {
     const minMs = settings.minBlock.minutes * MIN;
+    const isFree = (i: number) => statuses[i].kind === "free";
     let i = 0;
     while (i < sorted.length) {
-      if (!isFree[i]) { i++; continue; }
+      if (!isFree(i)) { i++; continue; }
       let j = i;
-      while (j + 1 < sorted.length && isFree[j + 1] && sorted[j + 1].start === sorted[j].start + slotMs) j++;
+      while (j + 1 < sorted.length && isFree(j + 1) && sorted[j + 1].start === sorted[j].start + slotMs) j++;
       const runMs = sorted[j].start + slotMs - sorted[i].start;
-      if (runMs < minMs) for (let k = i; k <= j; k++) isFree[k] = false;
+      if (runMs < minMs) for (let k = i; k <= j; k++) statuses[k] = { kind: "short-gap", ignored: statuses[k].ignored };
       i = j + 1;
     }
   }
 
-  const free = sorted.filter((_, i) => isFree[i]).map((s) => s.w2mTime);
-  return { free, ignored, blocking };
+  const free = sorted.filter((_, i) => statuses[i].kind === "free").map((s) => s.w2mTime);
+  const status = new Map(sorted.map((s, i) => [s.w2mTime, statuses[i]]));
+  return { free, ignored, blocking, status };
 }
 
 function withinHours(start: number, end: number, w: Settings["hoursWindow"]): boolean {

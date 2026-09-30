@@ -6,6 +6,21 @@ export const PAGE_CSS = `
 [id^="YouTime"].w2x-remove {
   background-image: repeating-linear-gradient(45deg, #d33 0 3px, #ffdede 3px 6px) !important;
 }
+.w2x-layer {
+  position: absolute; top: 0; left: 0; width: 0; height: 0;
+  pointer-events: none; z-index: 2147483000;
+}
+.w2x-event {
+  position: absolute; box-sizing: border-box; overflow: hidden;
+  padding: 1px 3px; border-radius: 3px;
+  background: rgba(26, 115, 232, 0.72); border: 1px solid #1557b0; color: #fff;
+  font: 600 10px/1.15 system-ui, -apple-system, sans-serif; word-break: break-word;
+}
+.w2x-event.w2x-ignored {
+  background: rgba(255, 255, 255, 0.6); border: 1px dashed #777; color: #444; font-weight: 500;
+}
+.w2x-event.w2x-narrow { white-space: nowrap; text-overflow: ellipsis; font-size: 9px; padding: 1px 2px; }
+.w2x-event.w2x-allday { white-space: nowrap; text-overflow: ellipsis; z-index: 1; }
 `;
 
 /** Styles for the floating panel (inside a shadow root, isolated from when2meet's CSS). */
@@ -31,6 +46,7 @@ p { margin: 6px 0; }
 .sw { display: inline-block; width: 12px; height: 12px; border: 1px solid #000; vertical-align: -2px; }
 .sw.add { background: repeating-linear-gradient(45deg, #339900 0 3px, #b7e4a0 3px 6px); }
 .sw.remove { background: repeating-linear-gradient(45deg, #d33 0 3px, #ffdede 3px 6px); }
+.toggle { display: block; margin: 8px 0 0; cursor: pointer; }
 .flagged { margin: 8px 0; padding: 8px 10px; background: #fff8e1; border: 1px solid #f0d58a; border-radius: 8px; }
 .flagged summary { cursor: pointer; font-weight: 600; color: #7a5a00; }
 .flagged ul { list-style: none; margin: 6px 0 0; padding: 0; }

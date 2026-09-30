@@ -7,14 +7,17 @@ import { computeFreeSlots, resolveSlots, type ComputeResult } from "../shared/av
 import { FROM_CS, FROM_PAGE, type CsToPage, type PageToCs } from "../shared/bridge";
 import { loadSettings } from "../shared/settings";
 import {
+  IGNORE_REASON_LABEL,
   NEEDS_SIGN_IN,
   type BgRequest,
   type BgResponse,
   type CalEvent,
   type GridInfo,
+  type Settings,
   type IgnoreReason,
   type Slot,
 } from "../shared/types";
+import { clearOverlay, drawOverlay } from "./overlay";
 import { BANNER_CSS, PAGE_CSS } from "./styles";
 
 // ---------- messaging ----------
@@ -64,9 +67,12 @@ interface PreviewState {
   slotMs: number;
   events: CalEvent[];
   forceBusy: Set<string>;
+  settings: Settings;
   result: ComputeResult;
 }
 let state: PreviewState | null = null;
+/** Whether calendar events are drawn over the grid. */
+let showEvents = true;
 
 // ---------- UI shell ----------
 
@@ -111,6 +117,7 @@ function render(...children: (Node | string | null | false | undefined)[]) {
 
 function close() {
   clearHighlights();
+  clearOverlay();
   panel.hidden = true;
   launcher.hidden = false;
   state = null;
@@ -152,7 +159,7 @@ async function startPreview() {
       timeMin: Math.min(...starts) - DAY,
       timeMax: Math.max(...starts) + slotMs + DAY,
     });
-    state = { grid, slots, slotMs, events, forceBusy: new Set(), result: null! };
+    state = { grid, slots, slotMs, events, forceBusy: new Set(), settings: null!, result: null! };
     await recompute();
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
@@ -183,9 +190,10 @@ function renderSignIn() {
 async function recompute() {
   if (!state) return;
   if (!extensionAlive()) return renderError(STALE_MESSAGE);
-  const settings = await loadSettings();
-  state.result = computeFreeSlots(state.slots, state.slotMs, state.events, settings, state.forceBusy);
+  state.settings = await loadSettings();
+  state.result = computeFreeSlots(state.slots, state.slotMs, state.events, state.settings, state.forceBusy);
   highlight();
+  redrawOverlay();
   renderPreview();
 }
 
@@ -198,12 +206,6 @@ function diff() {
     remove: grid.currentlyAvailable.filter((t) => !want.has(t)),
   };
 }
-
-const REASON_LABEL: Record<IgnoreReason, string> = {
-  "all-day": "all-day",
-  declined: "declined",
-  "marked-free": "shown as free",
-};
 
 function renderPreview() {
   const { grid, slots, slotMs, result, forceBusy } = state!;
@@ -244,7 +246,7 @@ function renderPreview() {
               }),
               h("span", {},
                 h("span", { className: "ev-title" }, e.title),
-                h("span", { className: "ev-meta" }, ` · ${REASON_LABEL[e.reason]} · ${fmtRange(e.start, e.end, e.allDay)}`),
+                h("span", { className: "ev-meta" }, ` · ${IGNORE_REASON_LABEL[e.reason]} · ${fmtRange(e.start, e.end, e.allDay)}`),
               ),
             ),
           ),
@@ -265,6 +267,7 @@ function renderPreview() {
     ),
     weekdayNote,
     flaggedList,
+    eventsToggle(),
     h("div", { className: "actions" },
       h("button", { className: "primary", disabled: nothingToDo, onclick: () => void apply() }, nothingToDo ? "Already up to date" : "Apply to when2meet"),
       h("button", { onclick: close }, "Cancel"),
@@ -287,6 +290,7 @@ async function apply() {
   if (res.type !== "applied") return renderError(`Couldn't save: ${res.type === "applyFailed" ? res.error : "unexpected reply"}`, () => void startPreview());
   render(
     h("p", {}, `✓ Saved. ${res.added} slot${res.added === 1 ? "" : "s"} added, ${res.removed} removed.`),
+    eventsToggle(),
     h("div", { className: "actions" },
       h("button", { onclick: () => void undo(previous) }, "Undo"),
       h("button", { className: "primary", onclick: close }, "Done"),
@@ -300,6 +304,34 @@ async function undo(previous: number[]) {
   if (res.type !== "applied") return renderError(`Couldn't undo: ${res.type === "applyFailed" ? res.error : "unexpected reply"}`);
   render(h("p", {}, "Restored your previous availability."), h("div", { className: "actions" }, h("button", { onclick: close }, "Close")));
 }
+
+// ---------- event overlay ----------
+
+function eventsToggle() {
+  return h("label", { className: "toggle" },
+    h("input", {
+      type: "checkbox",
+      checked: showEvents,
+      onchange: (ev: Event) => {
+        showEvents = (ev.target as HTMLInputElement).checked;
+        redrawOverlay();
+      },
+    }),
+    " Show events on grid (hover a cell for details)",
+  );
+}
+
+function redrawOverlay() {
+  if (state && showEvents) drawOverlay(state.slots, state.slotMs, state.result, state.settings);
+  else clearOverlay();
+}
+
+// The overlay is absolutely positioned, so re-measure when the layout changes.
+let resizeTimer: number | undefined;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = window.setTimeout(() => state && showEvents && redrawOverlay(), 100);
+});
 
 // ---------- grid highlights ----------
 
