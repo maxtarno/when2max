@@ -2,6 +2,7 @@
 // script (background, content, page-world) as a standalone IIFE, since MV3 content
 // scripts can't be ES modules.
 import { build } from "vite";
+import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "..");
@@ -30,3 +31,10 @@ for (const name of ["background", "content", "page"]) {
     },
   });
 }
+
+// Stamp the package.json version into the built manifest so there's one source of truth.
+const { version } = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8"));
+const manifestPath = resolve(root, "dist/manifest.json");
+const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+manifest.version = version;
+writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");

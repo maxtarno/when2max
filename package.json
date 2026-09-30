@@ -1,6 +1,6 @@
 {
   "name": "when2max",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Chrome extension that autofills when2meet availability from Google Calendar",
   "type": "module",
@@ -8,7 +8,9 @@
     "build": "node scripts/build.mjs",
     "watch": "node scripts/build.mjs --watch",
     "typecheck": "tsc --noEmit",
-    "test": "TZ=America/New_York vitest run"
+    "test": "TZ=America/New_York vitest run",
+    "package": "node scripts/release.mjs",
+    "release": "node scripts/release.mjs --publish"
   },
   "overrides": {
     "std-env": "4.2.0"

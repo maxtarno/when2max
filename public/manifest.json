@@ -4,8 +4,8 @@
   "version": "0.1.0",
   "description": "Autofill your when2meet availability from Google Calendar.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu8wWdokaL3j35Fd4fKEv+ISyQ6JXBSj04IKB7d/LA+b7SwewnKZKYNwN2jU+/J3WX1Vf3IN6mnN0ItOp0BocgB3XiFgCRgG5/tqaTDSnJwTQhmjaHieZx3loQHFJdg270UOlPCTfpbAErMHRwzPrqHuIjUqgEZI6iTdtb2v7DoXJc3Mt6mdlR6vPY426vbLRrbknRz9Adsb+zEBHMpJ4W2tCIvDlfe0CnN/iP+V92VQZI/cLA+7w2iOnae97bYLk6Bw76Ile8SU7i0U9s5mv9cs/dcskW4LXQGpDmQvH9bdR5z8FD9tIDIkgDFg9Ne6yfVO3Sspb+Yc9dZTsV59rMQIDAQAB",
-  "permissions": ["identity", "storage"],
-  "host_permissions": ["https://www.googleapis.com/*", "https://oauth2.googleapis.com/*"],
+  "permissions": ["identity", "storage", "alarms"],
+  "host_permissions": ["https://www.googleapis.com/*", "https://oauth2.googleapis.com/*", "https://api.github.com/*"],
   "oauth2": {
     "client_id": "302901805514-el0trdee2uml13j30gm3p67ajkmhiotp.apps.googleusercontent.com",
     "scopes": ["https://www.googleapis.com/auth/calendar.readonly"]

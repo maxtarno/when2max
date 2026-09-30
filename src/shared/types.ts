@@ -76,7 +76,14 @@ export type BgRequest =
   | { type: "listCalendars"; interactive: boolean }
   | { type: "signIn" }
   | { type: "signOut" }
-  | { type: "openOptions" };
+  | { type: "openOptions" }
+  | { type: "getUpdate" };
+
+export interface UpdateInfo {
+  version: string;
+  releaseUrl: string;
+  downloadUrl: string;
+}
 
 export interface CalendarSummary {
   id: string;

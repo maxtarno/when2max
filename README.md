@@ -6,6 +6,8 @@ Sign in on a when2meet page and a panel appears with your free time previewed on
 
 While the panel is open, your calendar events are drawn over the grid: solid blue for events that block time, faded and dashed for ignored ones, and a strip at the top of the day for all-day events. Hover any cell to see why it's busy or free (event, buffer, outside your hours, or too-short gap). Untick **Show events on grid** to hide them.
 
+**Just want to install it?** See [INSTALL.md](INSTALL.md).
+
 ## What counts as free
 
 A 15-minute slot is free when it doesn't overlap a busy event from your chosen calendars, subject to these settings (each can be toggled):
@@ -86,6 +88,22 @@ npm run typecheck
 when2meet doesn't have an API. The page script saves by posting to `SaveTimes.php` the same way when2meet's own drag handler does: one request to add slots, one to remove them. If when2meet changes its page script, `src/page/index.ts` is the file to update.
 
 Weekday-only polls use fake timestamps in a fixed week of November 1978, read as UTC wall-clock time. `resolveSlots` maps them to real dates.
+
+## Releasing a new version
+
+```sh
+npm version minor --no-git-tag-version   # or patch; bumps package.json (the manifest version is stamped from it)
+git commit -am "Release x.y.z" && git push
+npm run release                          # builds, zips when2max-x.y.z.zip, creates GitHub release vx.y.z
+```
+
+`npm run package` makes the zip without publishing. Installed copies check the latest GitHub release once a day and show an update notice in the panel and settings page.
+
+## Sharing with friends
+
+The OAuth app is **In production, unverified**. Anyone can connect after clicking through Google's "unverified app" screen, up to 100 users total, and connections don't expire weekly. Send friends [INSTALL.md](INSTALL.md).
+
+If a Google connection does lapse, the extension reopens Google sign-in automatically the next time it needs the calendar (once per page), as long as that account has connected before.
 
 ## Privacy
 

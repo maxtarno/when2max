@@ -16,6 +16,7 @@ import {
   type Settings,
   type IgnoreReason,
   type Slot,
+  type UpdateInfo,
 } from "../shared/types";
 import { clearOverlay, drawOverlay } from "./overlay";
 import { BANNER_CSS, PAGE_CSS } from "./styles";
@@ -172,14 +173,34 @@ async function startPreview() {
     await recompute();
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    if (msg === NEEDS_SIGN_IN) return renderSignIn();
+    if (msg === NEEDS_SIGN_IN) return reconnectOrAsk();
     renderError(msg, () => void startPreview());
   }
 }
 
-function renderSignIn() {
+let autoReconnectTried = false;
+
+/**
+ * Google grants can lapse (e.g. after 7 days while the OAuth app is in Testing). If the user
+ * has connected before, open Google's sign-in right away instead of asking first; once per page.
+ */
+async function reconnectOrAsk() {
+  const { connectedBefore } = await chrome.storage.local.get("connectedBefore");
+  if (!connectedBefore || autoReconnectTried) return renderSignIn();
+  autoReconnectTried = true;
+  render(h("p", {}, "Your Google Calendar connection expired. Reconnecting…"));
+  try {
+    await bg({ type: "signIn" });
+    void startPreview();
+  } catch (e) {
+    renderSignIn(e instanceof Error ? e.message : String(e));
+  }
+}
+
+function renderSignIn(error?: string) {
   render(
     h("p", {}, "Connect your Google Calendar to autofill this when2meet."),
+    error && h("p", { className: "error" }, error),
     h("div", { className: "actions" },
       h("button", {
         className: "primary",
@@ -188,7 +209,7 @@ function renderSignIn() {
             await bg({ type: "signIn" });
             void startPreview();
           } catch (e) {
-            renderError(e instanceof Error ? e.message : String(e), renderSignIn);
+            renderSignIn(e instanceof Error ? e.message : String(e));
           }
         },
       }, "Connect Google Calendar"),
@@ -266,6 +287,7 @@ function renderPreview() {
 
   const nothingToDo = add.length === 0 && remove.length === 0;
   render(
+    updateNotice(),
     h("p", {},
       h("strong", {}, `${fmtHours(hours)} free`),
       ` across ${new Set(slots.filter((s) => result.free.includes(s.w2mTime)).map((s) => new Date(s.start).toDateString())).size} day(s), from ${result.blocking.length} busy event${result.blocking.length === 1 ? "" : "s"}.`,
@@ -313,6 +335,21 @@ async function undo(previous: number[]) {
   const res = await page({ type: "apply", free: previous });
   if (res.type !== "applied") return renderError(`Couldn't undo: ${res.type === "applyFailed" ? res.error : "unexpected reply"}`);
   render(h("p", {}, "Restored your previous availability."), h("div", { className: "actions" }, h("button", { onclick: close }, "Close")));
+}
+
+// ---------- update notice ----------
+
+let update: UpdateInfo | null = null;
+if (extensionAlive()) bg<UpdateInfo | null>({ type: "getUpdate" }).then((u) => (update = u), () => {});
+
+function updateNotice() {
+  if (!update) return null;
+  return h("p", { className: "update" },
+    `⬆ when2max ${update.version} is available. `,
+    h("a", { href: update.downloadUrl, target: "_blank", rel: "noopener" }, "Download"),
+    " · ",
+    h("a", { href: update.releaseUrl, target: "_blank", rel: "noopener" }, "What's new"),
+  );
 }
 
 // ---------- event overlay ----------

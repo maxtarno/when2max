@@ -2,3 +2,5 @@ node_modules/
 dist/
 *.pem
 .DS_Store
+/*.png
+when2max-*.zip

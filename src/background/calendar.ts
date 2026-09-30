@@ -6,6 +6,8 @@ export async function getToken(interactive: boolean): Promise<string> {
   try {
     const { token } = await chrome.identity.getAuthToken({ interactive });
     if (!token) throw new Error("No token returned");
+    // Remembered so an expired connection can reconnect automatically instead of asking first.
+    await chrome.storage.local.set({ connectedBefore: true });
     return token;
   } catch (e) {
     throw new Error(explainAuthError(String((e as Error).message ?? e)));

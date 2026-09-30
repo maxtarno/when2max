@@ -41,6 +41,8 @@ export const BANNER_CSS = `
 p { margin: 6px 0; }
 .note { color: #555; }
 .error { color: #b3261e; }
+.update { margin: 0 0 8px; padding: 6px 8px; border-radius: 8px; background: #e8f0fe; color: #174ea6; }
+.update a { color: inherit; font-weight: 600; }
 .hint { color: #777; font-size: 12px; margin: 4px 0 0; }
 .legend { color: #444; }
 .sw { display: inline-block; width: 12px; height: 12px; border: 1px solid #000; vertical-align: -2px; }

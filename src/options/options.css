@@ -22,3 +22,7 @@ button.link { border: none; background: none; color: #0b57d0; padding: 4px 0; }
 .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
 .error { color: #d33; }
 .saved { color: var(--accent); min-height: 1.5em; }
+.update { padding: 10px 12px; border-radius: 10px; background: #e8f0fe; color: #174ea6; }
+.update a { color: inherit; font-weight: 600; }
+@media (prefers-color-scheme: dark) { .update { background: #1f2a44; color: #aecbfa; } }
+.version { color: var(--muted); font-size: 12px; }

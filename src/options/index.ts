@@ -1,5 +1,5 @@
 import { loadSettings, saveSettings } from "../shared/settings";
-import { NEEDS_SIGN_IN, type BgRequest, type BgResponse, type CalendarSummary, type Settings } from "../shared/types";
+import { NEEDS_SIGN_IN, type BgRequest, type BgResponse, type CalendarSummary, type Settings, type UpdateInfo } from "../shared/types";
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -111,7 +111,21 @@ async function refreshAuth(interactive: boolean) {
   }
 }
 
+async function showUpdate() {
+  const u = await bg<UpdateInfo | null>({ type: "getUpdate" }).catch(() => null);
+  if (!u) return;
+  const el = $("update");
+  el.innerHTML = `⬆ when2max <b></b> is available (you have ${chrome.runtime.getManifest().version}). <a target="_blank" rel="noopener">Download</a> · <a target="_blank" rel="noopener">What's new</a><br>Unzip it over your current when2max folder, then click reload on chrome://extensions.`;
+  el.querySelector("b")!.textContent = u.version;
+  const [dl, notes] = el.querySelectorAll("a");
+  dl.href = u.downloadUrl;
+  notes.href = u.releaseUrl;
+  el.hidden = false;
+}
+
 async function main() {
+  $("version").textContent = `Version ${chrome.runtime.getManifest().version}`;
+  void showUpdate();
   settings = await loadSettings();
   bindConstraints();
   $("sign-in").onclick = () => void refreshAuth(true);
